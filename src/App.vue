@@ -1,42 +1,49 @@
 <template>
   <!--<HelloWorld msg="Welcome to Your Vue.js App" /> -->
   <div id="background">
-    <h1>MICROBLOGS</h1>
-    <button @click="logout" v-if="loggedin">log out</button>
-    <div class="maindiv max-w-sm rounded overflow-hidden shadow-lg">
-      <div id="content" v-if="loggedin">
-        <BlogPost
-          v-for="post in blogPosts"
-          :key="post.ID"
-          :text="post.text"
-          :index="blogPosts.indexOf(post)"
-          :id="post.ID"
-          @delete="deletePost"
-        />
-        <div id="blogform">
-          <form class="bg-white rounded px-8 pt-6 pb-8 mb-4">
-            <input
-              v-model="text"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              type="text"
-              @keyup.enter="addPost"
-            />
-          </form>
-          <button
-            @click="addPost"
-            class="submitbutton bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            type="button"
-          >
-            submit
-          </button>
+    <div class="header">
+      <button class="button" @click="logout" v-if="loggedin">log out</button>
+      <h1>MICROBLOGS</h1>
+    </div>
+    <div id="layout">
+      <div class="maindiv max-w-sm rounded overflow-hidden shadow-lg">
+        <div id="content" v-if="loggedin">
+          <BlogPost
+            v-for="post in blogPosts"
+            :key="post.ID"
+            :text="post.text"
+            :index="blogPosts.indexOf(post)"
+            :id="post.ID"
+            @delete="deletePost"
+          />
+          <div id="blogform">
+            <form class="bg-white rounded px-8 pt-6 pb-8 mb-4">
+              <input
+                v-model="text"
+                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                type="text"
+                @keyup.enter="addPost"
+              />
+            </form>
+            <button
+              @click="addPost"
+              class="submitbutton bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              type="button"
+            >
+              submit
+            </button>
+          </div>
+        </div>
+        <div id="content" v-else>
+          <LoginPage
+            :csrfToken="csrfToken"
+            @login="loginLoad"
+            @register="loginLoad"
+          />
         </div>
       </div>
-      <div id="content" v-else>
-        <LoginPage
-          :csrfToken="csrfToken"
-          @login="loginLoad"
-          @register="loginLoad"
-        />
+      <div v-if="loggedin" class="mapdiv rounded overflow-hidden shadow-lg">
+        <NoteMap />
       </div>
     </div>
     {{ statusMessage }}
@@ -47,6 +54,7 @@
 //import HelloWorld from './components/HelloWorld.vue';
 import BlogPost from "./components/BlogPost.vue";
 import LoginPage from "./components/LoginPage.vue";
+import NoteMap from "./components/NoteMap.vue";
 import axios from "axios";
 const path = "http://localhost:5000/";
 
@@ -56,6 +64,7 @@ export default {
     //HelloWorld,
     BlogPost,
     LoginPage,
+    NoteMap,
   },
   data() {
     return {
@@ -63,15 +72,15 @@ export default {
       list: ["one", "two"],
       msg: "ms",
       text: "",
-      loggedin: false,
+      loggedin: true,
       csrfToken: "",
       statusMessage: "",
       axiosConfig: {
-          headers: {
-            "X-CSRFToken": this.csrfToken,
-          },
-          withCredentials: true,
-        }
+        headers: {
+          "X-CSRFToken": this.csrfToken,
+        },
+        withCredentials: true,
+      },
     };
   },
   created() {
@@ -85,21 +94,22 @@ export default {
       const path = "http://localhost:5000/deletepost";
       this.blogPosts.splice(index, 1);
       axios
-        .post(path, {
-          postID: id,
-        },
-        {
-          headers: {
-            "X-CSRFToken": this.csrfToken,
+        .post(
+          path,
+          {
+            postID: id,
           },
-          withCredentials: true,
-        })
-        .then(() => {
-          
-        })
+          {
+            headers: {
+              "X-CSRFToken": this.csrfToken,
+            },
+            withCredentials: true,
+          }
+        )
+        .then(() => {})
         .catch(() => {
-          this.statusMessage = "Delete Failed"
-          this.loadPosts()
+          this.statusMessage = "Delete Failed";
+          this.loadPosts();
         });
     },
     addPost(event) {
@@ -107,16 +117,19 @@ export default {
       if (this.text != "") {
         const path = "http://localhost:5000/addpost";
         axios
-          .post(path, {
-            text: this.text,
-            id: 1,
-          },
-          {
-          headers: {
-            "X-CSRFToken": this.csrfToken,
-          },
-          withCredentials: true,
-        })
+          .post(
+            path,
+            {
+              text: this.text,
+              id: 1,
+            },
+            {
+              headers: {
+                "X-CSRFToken": this.csrfToken,
+              },
+              withCredentials: true,
+            }
+          )
           .then((res) => {
             this.blogPosts.push({
               text: res.data.text,
@@ -191,6 +204,30 @@ export default {
   margin-top: 60px;
 }
 
+.header {
+  display: flex;
+  justify-content: space-around;
+}
+
+#layout {
+  display: flex;
+  position: fixed;
+  justify-content: space-around;
+  width: 100%;
+  height: 95%;
+  left: 0;
+  top: 0;
+  margin-top: 30px;
+}
+
+#button {
+  left: 10%;
+  top: 10%;
+}
+
+.mapdiv {
+}
+
 #content {
   margin: 10px 5px 5px 0px;
 }
@@ -211,8 +248,8 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  margin: auto;
   margin-top: 5%;
+  margin-bottom: auto;
   background-color: white;
 }
 

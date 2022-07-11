@@ -1,4 +1,4 @@
-# flask-frontend2
+# Geonotes-front
 
 ## Project setup
 ```
