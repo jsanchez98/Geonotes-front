@@ -6,7 +6,7 @@
       <h1 style="color:white">GEONOTES</h1>
     </div>
     <div id="layout">
-      <div id="maindiv" class="max-w-sm rounded overflow-hidden shadow-lg">
+      <div id="maindiv" :style="{top: maindivTop, left: maindivLeft}" class="max-w-sm rounded overflow-hidden shadow-lg">
         <div id="content" v-if="loggedin">
           <BlogPost
             v-for="post in blogPosts"
@@ -44,7 +44,7 @@
         <h1 v-if="loggedin && pointToSet"> {{ JSON.stringify(pointToSet.geometry.coordinates) }} </h1>
       </div>
       <div v-if="loggedin" class="mapdiv rounded overflow-hidden shadow-lg">
-        <NoteMap @setPoint="setPoint"/>
+        <NoteMap @setPoint="setPoint" :posts="blogPosts"/>
       </div>
     </div>
     {{ statusMessage }}
@@ -83,6 +83,8 @@ export default {
         withCredentials: true,
       },
       pointToSet: null,
+      maindivTop: "30vh",
+      maindivLeft: "36.5vw"
     };
   },
   created() {
@@ -123,7 +125,6 @@ export default {
             path,
             {
               text: this.text,
-              id: 1,
               coordinates: JSON.stringify(this.pointToSet.geometry.coordinates)
             },
             {
@@ -161,6 +162,8 @@ export default {
         .then((res) => {
           this.blogPosts = res.data;
           this.loggedin = true;
+          this.maindivTop = "0px";
+          this.maindivLeft= "0px"
         })
         .catch((error) => {
           alert("here " + error.message);
@@ -180,6 +183,8 @@ export default {
         })
         .then(() => {
           this.loggedin = false;
+          this.maindivTop= "30vh"
+          this.maindivLeft= "36.5vw"
         })
         .catch((error) => {
           alert("logout failed " + error.message);

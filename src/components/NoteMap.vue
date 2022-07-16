@@ -16,10 +16,55 @@ export default {
       pointToSet: null,
     };
   },
+  props: {
+    posts: [Object],
+  },
   created() {
     this.renderMap();
   },
   methods: {
+    convertIconsToFeatures(posts) {
+      alert(JSON.stringify(posts[0]));
+      return posts.map((post) => {
+        return {
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: JSON.parse(post.coordinates),
+          },
+          properties: {
+            id: "post.id",
+          },
+        };
+      });
+    },
+    addIconsToMap(map) {
+      let geojson = {
+        type: "FeatureCollection",
+        features: [],
+      };
+      const icon_features = this.convertIconsToFeatures(this.posts);
+      geojson = {
+        type: "FeatureCollection",
+        features: icon_features,
+      };
+      map.addSource("geojson", {
+        type: "geojson",
+        data: geojson,
+      });
+      map.addLayer({
+        id: "point",
+        type: "circle",
+        source: "geojson",
+        paint: {
+          "circle-radius": 9,
+          "circle-color": "#2638ff",
+        },
+        filter: ["in", "$type", "Point"],
+      });
+
+      return geojson;
+    },
     renderMap() {
       let self = this;
       nextTick(function () {
@@ -33,11 +78,6 @@ export default {
           zoom: 13,
         });
         self.map = map;
-
-        const geojson = {
-          type: "FeatureCollection",
-          features: [],
-        };
 
         //map.addControl(
         //  new mapboxgl.GeolocateControl({
@@ -61,32 +101,33 @@ export default {
 
         map.on("load", () => {
           map = self.map;
-          map.addSource("geojson", {
-            type: "geojson",
-            data: geojson,
-          });
-
-          map.addLayer({
-            id: "point",
-            type: "circle",
-            source: "geojson",
-            paint: {
-              "circle-radius": 7,
-              "circle-color": "#070808",
-            },
-            filter: ["in", "$type", "Point"],
-          });
+          const geojson = self.addIconsToMap(map);
 
           map.on("click", (e) => {
-            if (geojson.features.length >= 1) {
-              geojson.features.pop();
-            }
+            //if (geojson.features.length >= 1) {
+            //  geojson.features.pop();
+            //}
             // Check if an icon was clicked, if so, do nothing
             //[[e.point - 20,e.point + 20], [e.point + 20, e.point - 20]]
             const features = map.queryRenderedFeatures(e.point);
 
             if (features.length) {
-              return
+              let content = document.createElement("div");
+              content.style.width = `$100px`;
+              content.style.height = `$100px`;
+              //content.appendChild(document.createTextNode("popup"))
+              content.appendChild(document.createElement("br"));
+
+              let button = document.createElement("button");
+              button.innerHTML = "Create New Note";
+
+              content.appendChild(document.createElement("br"));
+              content.appendChild(button);
+              new mapboxgl.Popup()
+                .setDOMContent(content)
+                .setLngLat([e.lngLat.lng, e.lngLat.lat])
+                .addTo(map)
+              return;
             } else {
               const point = {
                 type: "Feature",
@@ -101,40 +142,10 @@ export default {
 
               geojson.features.push(point);
 
-              //map.getSource("geojson").setData(geojson);
-              const el = document.createElement("div");
-
-              el.style.backgroundImage = `url(/images/placeholder.png)`;
-              el.style.width = `40px`;
-              el.style.height = `40px`;
-              el.style.backgroundSize = "100%";
-              el.className = "marker";
+              map.getSource("geojson").setData(geojson);
 
               self.pointToSet = point;
               self.$emit("setPoint", point);
-
-              let content = document.createElement("div");
-              content.style.width = `$100px`;
-              content.style.height = `$100px`;
-              //content.appendChild(document.createTextNode("popup"))
-              content.appendChild(document.createElement("br"));
-
-              let button = document.createElement("button");
-              button.innerHTML = "request to join button";
-
-              content.appendChild(document.createElement("br"));
-              content.appendChild(button);
-              let popup = new mapboxgl.Popup()
-                .setDOMContent(content)
-                .setLngLat([e.lngLat.lng, e.lngLat.lat]);
-
-              const marker = new mapboxgl.Marker(el)
-                .setLngLat([e.lngLat.lng, e.lngLat.lat])
-                .addTo(self.map);
-
-              el.addEventListener("click", () => {
-                marker.setPopup(popup);
-              });
             }
           });
         });
