@@ -13,7 +13,7 @@ export default {
   data() {
     return {
       map: null,
-      createLocation: null,
+      pointToSet: null,
     };
   },
   created() {
@@ -39,25 +39,25 @@ export default {
           features: [],
         };
 
-        map.addControl(
-          new mapboxgl.GeolocateControl({
-            positionOptions: {
-              enableHighAccuracy: true,
-            },
-            trackUserLocation: true,
-          })
-        );
+        //map.addControl(
+        //  new mapboxgl.GeolocateControl({
+        //    positionOptions: {
+        //      enableHighAccuracy: true,
+        //    },
+        //    trackUserLocation: true,
+        //  })
+        //);
 
-       //map.addLayer({
-       //  id: "point",
-       //  type: "circle",
-       //  source: "geojson",
-       //  paint: {
-       //    "circle-radius": 7,
-       //    "circle-color": "#2638ff",
-       //  },
-       //  filter: ["in", "$type", "Point"],
-       //});
+        //map.addLayer({
+        //  id: "point",
+        //  type: "circle",
+        //  source: "geojson",
+        //  paint: {
+        //    "circle-radius": 7,
+        //    "circle-color": "#2638ff",
+        //  },
+        //  filter: ["in", "$type", "Point"],
+        //});
 
         map.on("load", () => {
           map = self.map;
@@ -72,7 +72,7 @@ export default {
             source: "geojson",
             paint: {
               "circle-radius": 7,
-              "circle-color": "#2638ff",
+              "circle-color": "#070808",
             },
             filter: ["in", "$type", "Point"],
           });
@@ -81,23 +81,61 @@ export default {
             if (geojson.features.length >= 1) {
               geojson.features.pop();
             }
+            // Check if an icon was clicked, if so, do nothing
+            //[[e.point - 20,e.point + 20], [e.point + 20, e.point - 20]]
+            const features = map.queryRenderedFeatures(e.point);
 
-            const point = {
-              type: "Feature",
-              geometry: {
-                type: "Point",
-                coordinates: [e.lngLat.lng, e.lngLat.lat],
-              },
-              properties: {
-                id: String(new Date().getTime()),
-              },
-            };
+            if (features.length) {
+              return
+            } else {
+              const point = {
+                type: "Feature",
+                geometry: {
+                  type: "Point",
+                  coordinates: [e.lngLat.lng, e.lngLat.lat],
+                },
+                properties: {
+                  id: String(new Date().getTime()),
+                },
+              };
 
-            geojson.features.push(point);
+              geojson.features.push(point);
 
-            map.getSource("geojson").setData(geojson);
+              //map.getSource("geojson").setData(geojson);
+              const el = document.createElement("div");
 
-            self.createLocation = point;
+              el.style.backgroundImage = `url(/images/placeholder.png)`;
+              el.style.width = `40px`;
+              el.style.height = `40px`;
+              el.style.backgroundSize = "100%";
+              el.className = "marker";
+
+              self.pointToSet = point;
+              self.$emit("setPoint", point);
+
+              let content = document.createElement("div");
+              content.style.width = `$100px`;
+              content.style.height = `$100px`;
+              //content.appendChild(document.createTextNode("popup"))
+              content.appendChild(document.createElement("br"));
+
+              let button = document.createElement("button");
+              button.innerHTML = "request to join button";
+
+              content.appendChild(document.createElement("br"));
+              content.appendChild(button);
+              let popup = new mapboxgl.Popup()
+                .setDOMContent(content)
+                .setLngLat([e.lngLat.lng, e.lngLat.lat]);
+
+              const marker = new mapboxgl.Marker(el)
+                .setLngLat([e.lngLat.lng, e.lngLat.lat])
+                .addTo(self.map);
+
+              el.addEventListener("click", () => {
+                marker.setPopup(popup);
+              });
+            }
           });
         });
       });
@@ -109,11 +147,20 @@ export default {
 <style scoped>
 #mapContainer {
   height: 100%;
-  width: 1000px;
+  width: 100%;
 }
 
 #mapElement {
   height: 100%;
-  width: 1000px;
+  width: 100%;
+}
+
+.marker {
+  display: block;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  background-image: url("./rugby.png");
 }
 </style>

@@ -2,11 +2,11 @@
   <!--<HelloWorld msg="Welcome to Your Vue.js App" /> -->
   <div id="background">
     <div class="header">
-      <button class="button" @click="logout" v-if="loggedin">log out</button>
-      <h1>MICROBLOGS</h1>
+      <button style="color:white" class="button" @click="logout" v-if="loggedin">log out</button>
+      <h1 style="color:white">GEONOTES</h1>
     </div>
     <div id="layout">
-      <div class="maindiv max-w-sm rounded overflow-hidden shadow-lg">
+      <div id="maindiv" class="max-w-sm rounded overflow-hidden shadow-lg">
         <div id="content" v-if="loggedin">
           <BlogPost
             v-for="post in blogPosts"
@@ -41,9 +41,10 @@
             @register="loginLoad"
           />
         </div>
+        <h1 v-if="loggedin && pointToSet"> {{ JSON.stringify(pointToSet.geometry.coordinates) }} </h1>
       </div>
       <div v-if="loggedin" class="mapdiv rounded overflow-hidden shadow-lg">
-        <NoteMap />
+        <NoteMap @setPoint="setPoint"/>
       </div>
     </div>
     {{ statusMessage }}
@@ -72,7 +73,7 @@ export default {
       list: ["one", "two"],
       msg: "ms",
       text: "",
-      loggedin: true,
+      loggedin: false,
       csrfToken: "",
       statusMessage: "",
       axiosConfig: {
@@ -81,6 +82,7 @@ export default {
         },
         withCredentials: true,
       },
+      pointToSet: null,
     };
   },
   created() {
@@ -114,7 +116,7 @@ export default {
     },
     addPost(event) {
       event.preventDefault();
-      if (this.text != "") {
+      if (this.text != "" && (this.pointToSet != null)) {
         const path = "http://localhost:5000/addpost";
         axios
           .post(
@@ -122,6 +124,7 @@ export default {
             {
               text: this.text,
               id: 1,
+              coordinates: JSON.stringify(this.pointToSet.geometry.coordinates)
             },
             {
               headers: {
@@ -141,6 +144,8 @@ export default {
             alert(error);
           });
       } else {
+        alert("failed")
+        this.timeoutStatusMessage("Please choose a location for this post")
         return;
       }
     },
@@ -190,6 +195,15 @@ export default {
           alert(err.message);
         });
     },
+    timeoutStatusMessage(message){
+      this.statusMessage = message
+      setTimeout(() => {
+        this.statusMessage = "";
+      }, 3000);
+    },
+    setPoint(point){
+      this.pointToSet = point
+    }
   },
 };
 </script>
@@ -210,14 +224,12 @@ export default {
 }
 
 #layout {
-  display: flex;
-  position: fixed;
-  justify-content: space-around;
+  position: relative;
   width: 100%;
   height: 95%;
   left: 0;
   top: 0;
-  margin-top: 30px;
+  margin-top: 5px;
 }
 
 #button {
@@ -226,10 +238,16 @@ export default {
 }
 
 .mapdiv {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top:0;
+  left:0;
+  pointer-events: all;
 }
 
 #content {
-  margin: 10px 5px 5px 0px;
+  margin: 10px 5px 5px 5px;
 }
 
 #blogform {
@@ -244,14 +262,28 @@ export default {
   height: 50px;
 }
 
-.maindiv {
+#maindiv {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  margin-top: 5%;
   margin-bottom: auto;
-  background-color: white;
+  margin-left: 20px;
+  background-color: #ede7da;
+  position: absolute;
+  z-index: 1;
+  top: 30vh;
+  left: 36.5vw;
+  transition: transform 1s;
 }
+/*
+@keyframes change_colour {
+  0%, 100% {
+    background-color: #105666;
+  }
+  100% {
+    background-color: #ed7a72;
+  }
+}*/
 
 #background {
   position: fixed;
@@ -259,6 +291,6 @@ export default {
   height: 100%;
   left: 0;
   top: 0;
-  background-color: #c8ecfb;
+  background-color: #ed7a72;
 }
 </style>
