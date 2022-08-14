@@ -1,4 +1,5 @@
 # Geonotes-front
+Geonotes is geolocation-enabled web app for taking notes.
 
 ## Project setup
 ```
@@ -22,5 +23,3 @@ npm run lint
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
-
-Geonotes is geolocation-enabled web app for taking notes.
