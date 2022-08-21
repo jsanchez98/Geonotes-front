@@ -1,8 +1,13 @@
 <template>
     <li id="blogpost"> 
+      <button @click="$emit('flyTo', note.coordinates)">
         {{ text }} 
-        <button id="buttonid" class=" bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" @click="$emit('delete', index, id)">
-            DEL
+        {{id}}
+        </button>
+        <button id="buttonid" class=" bg-red-400 hover:bg-red-700 text-white font-bold py-1 px-1 rounded" @click="$emit('delete', index, id)">
+        </button>
+        <button @click="$emit('close')" v-if="!showAll">
+          close
         </button>
     </li>
 </template>
@@ -12,10 +17,13 @@ export default {
     props: {
         text: String,
         id: Number,
-        index: Number
+        index: Number,
+        note: Object,
+        showAll: Boolean
     },
-    methods: {
-    },
+    updated(){
+        alert("updated")
+    }
 }
 </script>
 
@@ -25,9 +33,17 @@ export default {
         justify-content: space-between;
         margin-bottom: 5px;
         margin-left: 20px;
+        transition: 1s;
+        z-index: 10;
+        background-color: #ede7da;
+        border-radius: 10px;
+        border-style:solid;
+        border-color: #aba69c;
+        border-width: 1px;
     }
 
     #buttonid {
-        margin-right: 20px;
+        margin-right: 10px;
+        height: 30px;
     }
 </style>
