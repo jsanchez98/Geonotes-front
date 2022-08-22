@@ -15,6 +15,7 @@ export default {
     return {
       map: null,
       pointToSet: null,
+      geojson: []
     };
   },
   props: {
@@ -75,6 +76,7 @@ export default {
         map.getSource("geojson").setData(geojson);
       }
       
+      this.geojson = geojson;
       return geojson;
     },
     mapTo5dp(list) {
@@ -88,7 +90,6 @@ export default {
     openNote(features) {
       let component = this;
       if (features.length == 1) {
-        alert("5")
         const feature = features[0];
         const note = component.posts.find((post) => {
           let length = post.coordinates.length;
@@ -100,7 +101,6 @@ export default {
             .toString();
           return candidatePost == searchPost;
         });
-        alert(JSON.stringify(note))
         this.$emit("setNote", note);
       }
     },
@@ -114,8 +114,7 @@ export default {
     renderMap() {
       let self = this;
       nextTick(function () {
-        mapboxgl.accessToken =
-          "pk.eyJ1IjoianNhbmNoOTgiLCJhIjoiY2w1Z3Q1Yzc4MDJiODNrdGVqd3Rtb2V5OSJ9.GYwWTRDCQn85XZVUEU76EA";
+        mapboxgl.accessToken = process.env.VUE_APP_MAPBOX_KEY;
         let map = new mapboxgl.Map({
           container: "mapElement",
           projection: "globe",
@@ -160,17 +159,14 @@ export default {
             // Check if an icon was clicked, if so, do nothing
             //[[e.point - 20,e.point + 20], [e.point + 20, e.point - 20]]
             features = [];
-            alert("1")
             self.$emit("endCreateNote");
-            alert("2")
-            features = map.queryRenderedFeatures(e.point);
-            alert(JSON.stringify(features))
+            features = map.queryRenderedFeatures(e.point, {
+              layers: ['point']
+            });
             if (features.length) {
-              alert("4")
               self.openNote(features);
               return;
             } else {
-              alert("3")
               const point = {
                 type: "Feature",
                 geometry: {
@@ -201,6 +197,7 @@ export default {
 
               popup.on("close", () => {
                 self.$emit("endCreateNote");
+                geojson.features.splice(geojson.features.indexOf(point), 1)
                 map.getSource("geojson").setData(geojson);
               });
 

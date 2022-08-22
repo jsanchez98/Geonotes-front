@@ -4,7 +4,7 @@
     <div class="header">
       <h1 style="color: white">GEONOTES</h1>
       <button class="logout" @click="logout" v-if="loggedin">log out</button>
-      <button class="showall" @click="showAll" v-if="loggedin">show all</button>
+      <button :class="{showall: !isShowAll}" @click="show" v-if="loggedin">show all</button>
     </div>
     <div id="layout">
       <div
@@ -25,7 +25,7 @@
           v-for="post in selectedNotes"
           :key="post.ID"
           :text="post.text"
-          :index="blogPosts.indexOf(post)"
+          :index="selectedNotes.indexOf(post)"
           :id="post.ID"
           :note="post"
           :showAll="isShowAll"
@@ -33,7 +33,8 @@
           @flyTo="flyTo"
           @close="closeNotes"
         />
-        <div id="blogform" v-if="creatingNote">
+      </div>
+      <div id="blogform" v-if="creatingNote">
           <form class="bg-white rounded px-8 pt-6 pb-8 mb-4">
             <input
               v-model="text"
@@ -50,7 +51,6 @@
             submit
           </button>
         </div>
-      </div>
       <div v-if="loggedin" class="mapdiv rounded overflow-hidden shadow-lg">
         <NoteMap
           @createNote="createNote"
@@ -123,7 +123,6 @@ export default {
   methods: {
     deletePost(index, id) {
       const path = "http://localhost:5000/deletepost";
-      alert(id)
       axios
         .post(
           path,
@@ -137,8 +136,9 @@ export default {
             withCredentials: true,
           }
         )
-        .then(() => {
-          this.blogPosts.splice(index, 1);
+        .then((updatedNotes) => {
+          this.selectedNotes.splice(index, 1);
+          this.blogPosts = updatedNotes;
           this.$refs.map.addIconsToMap(this.$refs.map.map, true);
         })
         .catch(() => {
@@ -254,15 +254,28 @@ export default {
       this.selectedNotes = [note];
     },
     flyTo(coordinates){
-      
       this.$refs.map.map.flyTo({
         center: JSON.parse(coordinates),
         essential: true,
       });
     },
+    show(){
+      if(this.isShowAll){
+        this.showNone();
+      } else {
+        this.showAll();
+      }
+    },
     showAll() {
       this.selectedNotes = this.blogPosts;
       this.isShowAll = true;
+      this.creatingNote = false;
+      this.pointToSet = null;
+      this.popup = null;
+    },
+    showNone(){
+      this.selectedNotes = [];
+      this.isShowAll = false;
     },
     closeNotes(){
       this.selectedNotes = []
@@ -324,7 +337,7 @@ export default {
   display: flex;
   flex-direction: column;
   width: 400px;
-  height: 600px;
+  max-height: 85vh;
   overflow: auto;
 }
 
@@ -332,6 +345,8 @@ export default {
   display: flex;
   margin-top: 10px;
   align-items: center;
+  position: relative;
+  z-index: 10;
 }
 
 .submitbutton {
@@ -363,6 +378,15 @@ export default {
     background-color: #ed7a72;
   }
 }*/
+
+.showall {
+  color: white
+}
+
+.showall:hover {
+  color: black
+}
+
 
 #background {
   position: fixed;

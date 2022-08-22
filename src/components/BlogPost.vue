@@ -22,7 +22,6 @@ export default {
         showAll: Boolean
     },
     updated(){
-        alert("updated")
     }
 }
 </script>
