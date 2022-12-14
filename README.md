@@ -1,5 +1,5 @@
 # Geonotes-front
-Geonotes is geolocation-enabled web app for taking notes.
+Geonotes is a geolocation-enabled web app for taking notes.
 
 ## Project setup
 ```
